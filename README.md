@@ -100,6 +100,32 @@ In `src/app/globals.css`, add a `@source` directive so Tailwind generates utilit
 | `@dreampak/design-system/app-shell` | `AppShell` (TopBar + LeftNav + workspace, forwards TopBar slots) |
 | `@dreampak/design-system/top-bar` | `TopBar` (dp-ink bar; configurable logo + apps link; `topRightSlot` / `centerSlot` / `leftAccessory` render slots) |
 | `@dreampak/design-system/left-nav` | `LeftNav` (paper-soft sidebar; generic `navItems` with optional per-item `badge` render slot) |
+| `@dreampak/design-system/eslint-config` | Shared flat-config ESLint config (Next core-web-vitals + Next TS + `.vercel/**` ignore) |
+
+## ESLint
+
+The package ships a shared ESLint flat config that bundles `eslint-config-next`'s core-web-vitals + typescript rulesets and the `.vercel/**` build-artifact ignore (the one Phase 5 surfaced as drift across 5 of 8 consumers).
+
+Use it in the consumer's `eslint.config.mjs`:
+
+```js
+import dpConfig from "@dreampak/design-system/eslint-config";
+export default dpConfig;
+```
+
+Or extend it:
+
+```js
+import { defineConfig } from "eslint/config";
+import dpConfig from "@dreampak/design-system/eslint-config";
+
+export default defineConfig([
+  ...dpConfig,
+  // App-specific overrides go here.
+]);
+```
+
+Peer dependencies (optional — only needed when you adopt the shared config): `eslint ^9`, `eslint-config-next ^16`. They're declared optional, so v0.2.x consumers that haven't migrated their lint config will continue to work without edits.
 
 ## Chrome slot props (v0.2.0)
 
@@ -153,6 +179,12 @@ Or track `main` for latest:
 ```
 
 ## Changelog
+
+### v0.3.0 (2026-05-23)
+- New export: `@dreampak/design-system/eslint-config` — shared flat-config ESLint config (Next core-web-vitals + Next TS + `.vercel/**` ignore)
+- Adds optional `eslint` + `eslint-config-next` peer dependencies (only required when the consumer opts into the shared config)
+- Eliminates the `.vercel/output/` lint pollution drift Phase 5 surfaced across 5 of 8 consumers
+- No breaking changes; v0.2.x consumers continue to work without edits
 
 ### v0.2.0
 - TopBar gains `topRightSlot`, `centerSlot`, `leftAccessory` render-prop slots

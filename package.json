@@ -1,6 +1,6 @@
 {
   "name": "@dreampak/design-system",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "DreamPak design system v2 — Spec-sheet Editorial. Shared tokens + chrome + ui primitives for the DreamPak app family.",
   "license": "UNLICENSED",
   "private": false,
@@ -21,7 +21,8 @@
     "./section-rule": "./src/section-rule.tsx",
     "./app-shell": "./src/app-shell.tsx",
     "./top-bar": "./src/top-bar.tsx",
-    "./left-nav": "./src/left-nav.tsx"
+    "./left-nav": "./src/left-nav.tsx",
+    "./eslint-config": "./src/eslint-config.js"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -31,11 +32,17 @@
   },
   "peerDependencies": {
     "@base-ui/react": "^1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "^16",
     "next": ">=15",
     "react": ">=19",
     "react-dom": ">=19",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint": { "optional": true },
+    "eslint-config-next": { "optional": true }
   },
   "repository": {
     "type": "git",
