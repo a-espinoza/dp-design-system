@@ -100,6 +100,10 @@ In `src/app/globals.css`, add a `@source` directive so Tailwind generates utilit
 | `@dreampak/design-system/app-shell` | `AppShell` (TopBar + LeftNav + workspace, forwards TopBar slots) |
 | `@dreampak/design-system/top-bar` | `TopBar` (dp-ink bar; configurable logo + apps link; `topRightSlot` / `centerSlot` / `leftAccessory` render slots) |
 | `@dreampak/design-system/left-nav` | `LeftNav` (paper-soft sidebar; generic `navItems` with optional per-item `badge` render slot) |
+| `@dreampak/design-system/feedback-bubble` | `FeedbackBubble` — the floating FAB that powers the family-wide beta feedback channel |
+| `@dreampak/design-system/feedback-bubble-mount` | `FeedbackBubbleMount` — mount-and-gate wrapper for `FeedbackBubble`; the root layout invokes this one |
+| `@dreampak/design-system/build-tag` | `BuildTag` — the bottom-left version pill so users know which revision they're looking at |
+| `@dreampak/design-system/screenshot-editor` | `ScreenshotEditor` — overlay that crops + annotates a `html2canvas` capture before attach |
 | `@dreampak/design-system/eslint-config` | Shared flat-config ESLint config (Next core-web-vitals + Next TS + `.vercel/**` ignore) |
 
 ## ESLint
@@ -163,6 +167,72 @@ const navItems: NavItem[] = [
 ```
 
 All slots are optional; when undefined the v0.1.x layout renders unchanged.
+
+## Feedback bubble + BuildTag (v0.5.0)
+
+Every authed surface in the DreamPak family carries two small components in
+its root `layout.tsx`:
+
+- `<FeedbackBubbleMount>` — the floating FAB ("beta feedback"). Lets any
+  authenticated user drop a categorized note + optional screenshot. Posts
+  to a single centralized endpoint at `apps.dreampak.com/api/platform-feedback`
+  via the shared `.dreampak.com` session cookie.
+- `<BuildTag>` — a tiny pill, bottom-left, that prints the build version,
+  short commit SHA, and build time. Driven by `NEXT_PUBLIC_BUILD_VERSION`
+  / `NEXT_PUBLIC_BUILD_SHA` / `NEXT_PUBLIC_BUILD_TIME` env vars injected
+  at `next build`.
+
+Both components self-gate: they hide on `/login` and `/auth/*`, and the
+bubble additionally probes `/api/platform-feedback` (GET) to verify the
+session before rendering.
+
+### Hub (same-origin)
+
+```tsx
+import { FeedbackBubbleMount } from "@dreampak/design-system/feedback-bubble-mount";
+import { BuildTag } from "@dreampak/design-system/build-tag";
+
+<FeedbackBubbleMount appSlug="dp-hub" />
+<BuildTag appLabel="Hub" />
+```
+
+### Mini-app (cross-origin to the Hub)
+
+```tsx
+<FeedbackBubbleMount
+  appSlug="dp-upc"
+  apiOrigin="https://apps.dreampak.com"
+/>
+<BuildTag appLabel="UPC" />
+```
+
+### Endpoint contract
+
+The components expect the Hub-side endpoint to support:
+
+- `GET  /api/platform-feedback`   → 200 with `ThreadSnapshot` JSON on auth, 401 on no session
+- `GET  /api/platform-feedback?markSeen=1` → same shape, also marks admin replies seen
+- `POST /api/platform-feedback`   → 200 with `{ count, levelUp }` JSON on success
+
+The endpoint lives in `dp-hub` and reads/writes the `platform_feedback`
+table on `dp-platform`. The package does NOT ship the route — each
+consumer relies on the Hub to host it.
+
+### html2canvas dependency
+
+`FeedbackBubble` lazy-loads `html2canvas` via dynamic `import()` only when
+the user taps "Add screenshot." `html2canvas` is NOT declared as a
+dependency on this package because:
+
+1. Dynamic imports don't fail at module-resolution time — they fail only
+   when the user attempts the screenshot path.
+2. Consumers that previously shipped the bubble locally already have
+   `html2canvas` installed; the migration to v0.5.0 doesn't disturb that.
+
+A consumer that wants the screenshot path to work MUST keep
+`html2canvas` in its own `package.json`. If absent, the screenshot
+button surfaces a polite "couldn't capture" error and the text-only
+feedback path still works.
 
 ## Versioning
 
@@ -250,6 +320,13 @@ If `test:visual` fails on a non-intentional diff, do NOT publish — investigate
 A future minor version may move the `/showcase` route INTO this package as a self-contained Next.js demo (under `examples/showcase-app/`) so the harness can boot without depending on an external repo. That migration would re-enable a CI workflow. Tracked as follow-up under the design-system project.
 
 ## Changelog
+
+### v0.5.0 (2026-05-23)
+- New exports: `@dreampak/design-system/feedback-bubble`, `/feedback-bubble-mount`, `/build-tag`, `/screenshot-editor` — the family-wide beta feedback FAB + version pill, previously duplicated as local copies in all 9 consumer repos (dp-hub + 8 apps including the template)
+- Extracted from `dp-hub/src/components/feedback/*` (the canonical source); files identical across consumers per the 2026-05-23 audit
+- `html2canvas` stays dynamically imported by `FeedbackBubble`; consumers that want the screenshot path keep it in their own `package.json`
+- Per-consumer migration (delete `src/components/feedback/`, swap imports) is the Phase 10 sweep on the consumer side; this release is purely additive
+- No baseline changes — none of the new components render on the showcase route
 
 ### v0.4.1 (2026-05-23)
 - Remove `.github/workflows/visual-regression.yml` — the workflow tried to clone `a-espinoza/dp-app-template` which doesn't exist on GitHub (template is local-only). Harness is now local-only with a documented pre-release checklist.
