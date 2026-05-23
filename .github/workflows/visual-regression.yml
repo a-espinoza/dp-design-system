@@ -1,0 +1,109 @@
+# Visual regression harness for @dreampak/design-system.
+#
+# This workflow is intentionally annotated — the repo is public, so a future
+# reader (or future agent) can pick up cold. The harness validates that the
+# package's primitives render the same across versions by screenshot-diffing
+# dp-app-template's /showcase route against committed baselines.
+#
+# Why two repos: the package itself has no app to render in. dp-app-template
+# is the canonical consumer and hosts /showcase — a single page that exercises
+# every primitive variant. The workflow clones both side-by-side, boots the
+# template's dev server, and runs Playwright against it.
+#
+# Baselines live in tests/__screenshots__/ inside this repo. Intentional
+# design changes are regenerated locally with `npm run test:visual:update`
+# and committed alongside the change.
+#
+# History note: this workflow was REMOVED in v0.4.1 because dp-app-template
+# didn't exist on GitHub at the time (template was local-only inside the
+# SAAS Factory workspace). v0.5.1 restores it now that the template lives at
+# https://github.com/a-espinoza/dp-app-template as a public repo — no PAT
+# needed since both repos are public, the default GITHUB_TOKEN suffices.
+
+name: Visual regression
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  # Manual trigger for the design-system maintainer to re-run after pushing
+  # a baseline regeneration.
+  workflow_dispatch:
+
+jobs:
+  visual-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # Step 1 — check out the package repo into ./dp-design-system.
+      # We use an explicit `path` so we can also check out dp-app-template
+      # as a sibling, which is how the dev paths inside the design system
+      # consumers are laid out locally (../dp-app-template from the package).
+      - name: Check out dp-design-system
+        uses: actions/checkout@v4
+        with:
+          path: dp-design-system
+
+      # Step 2 — check out dp-app-template as a sibling at ./dp-app-template.
+      # This is the canonical consumer; the harness boots its `/showcase`
+      # route. Public repo, so the default GITHUB_TOKEN is sufficient — no
+      # extra secret needed.
+      - name: Check out dp-app-template (sibling)
+        uses: actions/checkout@v4
+        with:
+          repository: a-espinoza/dp-app-template
+          path: dp-app-template
+          ref: main
+
+      # Step 3 — Node + npm setup. Match the Node version pinned in
+      # dp-app-template's package.json so the showcase route boots the
+      # same way it would for a real consumer (Node 24.x per the Vercel
+      # project config).
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: dp-design-system/package-lock.json
+
+      # Step 4 — install the package's devDependencies (Playwright). We DON'T
+      # install dp-app-template's deps here — we install them next in a
+      # separate step so the cache key reflects each repo's lockfile.
+      - name: Install dp-design-system deps (Playwright)
+        working-directory: dp-design-system
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: dp-design-system
+        run: npx playwright install --with-deps chromium
+
+      # Step 5 — install dp-app-template's deps. The package.json there pins
+      # `@dreampak/design-system` to a v0.5.x tag; we override that with a
+      # local file:// reference so the harness validates THIS repo's code,
+      # not whatever tag is currently published.
+      - name: Install dp-app-template deps
+        working-directory: dp-app-template
+        run: |
+          npm install --no-save file:../dp-design-system
+          npm install
+
+      # Step 6 — run the harness. Playwright will boot the template's dev
+      # server via `npm run dev` (see playwright.config.ts → webServer), wait
+      # for /showcase to be ready, then take screenshots at 4 projects
+      # (desktop, tablet, mobile, reduced-motion).
+      - name: Run visual regression harness
+        working-directory: dp-design-system
+        run: npm run test:visual
+
+      # Step 7 — upload artifacts so reviewers can inspect a diff failure
+      # without re-running locally. The report includes the diff PNGs, the
+      # baseline, and the actual rendered screenshot for each failing test.
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: dp-design-system/playwright-report/
+          retention-days: 14

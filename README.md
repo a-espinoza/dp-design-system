@@ -317,9 +317,13 @@ If `test:visual` fails on a non-intentional diff, do NOT publish — investigate
 
 ### Follow-up
 
-A future minor version may move the `/showcase` route INTO this package as a self-contained Next.js demo (under `examples/showcase-app/`) so the harness can boot without depending on an external repo. That migration would re-enable a CI workflow. Tracked as follow-up under the design-system project.
+A future minor version may move the `/showcase` route INTO this package as a self-contained Next.js demo (under `examples/showcase-app/`). That would let the harness boot without the cross-repo clone and would make this a fully self-contained package. Tracked as follow-up under the design-system project; not urgent now that v0.5.1 has working CI.
 
 ## Changelog
+
+### v0.5.1 (2026-05-23)
+- Re-enable `.github/workflows/visual-regression.yml` — dp-app-template now lives at https://github.com/a-espinoza/dp-app-template as a public repo, so the workflow's `actions/checkout` of the template works with the default `GITHUB_TOKEN` (no PAT needed). CI runs the harness on every PR + push to `main`.
+- No runtime, API, or baseline changes from v0.5.0.
 
 ### v0.5.0 (2026-05-23)
 - New exports: `@dreampak/design-system/feedback-bubble`, `/feedback-bubble-mount`, `/build-tag`, `/screenshot-editor` — the family-wide beta feedback FAB + version pill, previously duplicated as local copies in all 9 consumer repos (dp-hub + 8 apps including the template)
