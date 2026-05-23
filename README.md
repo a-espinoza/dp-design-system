@@ -220,7 +220,24 @@ Each project produces one full-page screenshot plus nine per-section screenshots
 
 ### CI
 
-`.github/workflows/visual-regression.yml` runs the harness on every PR to `main` and every push to `main`. The workflow clones `dp-design-system` and `dp-app-template` side-by-side, links the local package checkout into the template's `node_modules`, and runs `npm run test:visual` against the dev server. On failure the Playwright HTML report and diff PNGs upload as workflow artifacts so a reviewer can decide between "real regression" and "intentional change, update baselines."
+**`v0.4.1` removed the GitHub Actions workflow.** The original `.github/workflows/visual-regression.yml` cloned `a-espinoza/dp-app-template` as a sibling — but that repo doesn't exist on GitHub (the template is local-only inside the SAAS Factory workspace). The workflow could never run green. Until the showcase is migrated into this package as a self-contained Next.js demo, the harness is **local-only**: run it manually before publishing a release that touches any primitive or token.
+
+### Pre-release checklist (manual)
+
+Before tagging a new version, the maintainer runs:
+
+```bash
+cd path/to/dp-design-system
+npm run test:visual:install   # one-time browser install
+npm run test:visual           # diffs against committed baselines
+
+# If the diff is intentional:
+npm run test:visual:update    # regenerate baselines
+git add tests/__screenshots__/
+git commit -m "chore(visual): rebaseline for vX.Y.Z"
+```
+
+If `test:visual` fails on a non-intentional diff, do NOT publish — investigate and fix.
 
 ### Maintainer responsibilities
 
@@ -228,11 +245,19 @@ Each project produces one full-page screenshot plus nine per-section screenshots
 - Don't commit screenshots outside `tests/__screenshots__/` — the gitignore covers `playwright-report/`, `test-results/`, and `blob-report/`.
 - The package version that ships visual changes bumps minor; baseline-only churn within an unchanged primitive still gets a release note.
 
+### Follow-up
+
+A future minor version may move the `/showcase` route INTO this package as a self-contained Next.js demo (under `examples/showcase-app/`) so the harness can boot without depending on an external repo. That migration would re-enable a CI workflow. Tracked as follow-up under the design-system project.
+
 ## Changelog
+
+### v0.4.1 (2026-05-23)
+- Remove `.github/workflows/visual-regression.yml` — the workflow tried to clone `a-espinoza/dp-app-template` which doesn't exist on GitHub (template is local-only). Harness is now local-only with a documented pre-release checklist.
+- No runtime, API, or baseline changes from v0.4.0.
 
 ### v0.4.0 (2026-05-23)
 - New tooling: Playwright visual regression harness — screenshots every primitive variant on `dp-app-template`'s `/showcase` route at 3 viewports plus reduced-motion
-- CI: `.github/workflows/visual-regression.yml` runs on every PR + push to main; uploads diff artifacts on failure
+- ~~CI: `.github/workflows/visual-regression.yml`~~ — removed in v0.4.1 (workflow could never run; see v0.4.1 entry)
 - Baselines: `tests/__screenshots__/` is the source of truth for the v2 visual contract
 - Adds `@playwright/test` + `playwright` as devDependencies; consumers are unaffected (devDependencies are not installed when the package is consumed via `github:` URL)
 - No runtime or API changes; this is a tooling-only release
