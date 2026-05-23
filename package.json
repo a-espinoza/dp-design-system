@@ -1,0 +1,44 @@
+{
+  "name": "@dreampak/design-system",
+  "version": "0.1.0",
+  "description": "DreamPak design system v2 — Spec-sheet Editorial. Shared tokens + chrome + ui primitives for the DreamPak app family.",
+  "license": "UNLICENSED",
+  "private": false,
+  "type": "module",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    "./styles.css": "./src/styles.css",
+    "./fonts": "./src/fonts.ts",
+    "./utils": "./src/utils.ts",
+    "./button": "./src/button.tsx",
+    "./card": "./src/card.tsx",
+    "./pill": "./src/pill.tsx",
+    "./field": "./src/field.tsx",
+    "./data-table": "./src/data-table.tsx",
+    "./section-rule": "./src/section-rule.tsx",
+    "./app-shell": "./src/app-shell.tsx",
+    "./top-bar": "./src/top-bar.tsx",
+    "./left-nav": "./src/left-nav.tsx"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.16.0",
+    "tailwind-merge": "^3.6.0"
+  },
+  "peerDependencies": {
+    "@base-ui/react": "^1.0.0",
+    "next": ">=15",
+    "react": ">=19",
+    "react-dom": ">=19",
+    "tailwindcss": "^4",
+    "tw-animate-css": "^1.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/a-espinoza/dp-design-system.git"
+  }
+}

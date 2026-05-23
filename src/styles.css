@@ -1,0 +1,325 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* =============================================================================
+ * DreamPak design system v2 — Spec-sheet Editorial
+ * Foundation tokens. See docs/DESIGN.md for the full rationale.
+ *
+ * Brand (unchanged from v1):
+ *   dp-navy #1F4792 — primary, active states, focus alt
+ *   dp-cyan #1694D0 — accent, links, focus primary
+ *   dp-ink  #0A0A0A — TopBar (always dark regardless of workspace)
+ *
+ * Paper & ink (new in v2):
+ *   paper #FAF9F6 — off-white workspace background
+ *   ink   #26221B — warm near-black body text
+ *
+ * Borders (warm charcoal scale, replacing v1 cool-grey-blue):
+ *   rule-strong #1A1A1A | border #2D2A26 | border-soft #C7C2B9 | border-paper #E4E0D7
+ *
+ * Typography:
+ *   font-display = Fraunces (variable opsz/SOFT/wght)
+ *   font-sans    = Geist Sans
+ *   font-mono    = Geist Mono
+ * =============================================================================
+ */
+
+@theme inline {
+  /* Brand tokens (use directly: bg-dp-navy, text-dp-cyan, etc.) */
+  --color-dp-navy: var(--dp-navy);
+  --color-dp-navy-hover: var(--dp-navy-hover);
+  --color-dp-navy-soft: var(--dp-navy-soft);
+  --color-dp-cyan: var(--dp-cyan);
+  --color-dp-cyan-hover: var(--dp-cyan-hover);
+  --color-dp-cyan-soft: var(--dp-cyan-soft);
+  --color-dp-ink: var(--dp-ink);
+  --color-dp-ink-soft: var(--dp-ink-soft);
+
+  /* Paper & ink — workspace neutrals */
+  --color-paper: var(--paper);
+  --color-paper-soft: var(--paper-soft);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+
+  /* Borders & rules — warm charcoal tier */
+  --color-rule-strong: var(--rule-strong);
+  --color-border-soft: var(--border-soft);
+  --color-border-paper: var(--border-paper);
+
+  /* Status palette — outline-by-default, solid only for error */
+  --color-status-issued-border: var(--status-issued-border);
+  --color-status-issued-fg: var(--status-issued-fg);
+  --color-status-issued-soft: var(--status-issued-soft);
+  --color-status-pending-border: var(--status-pending-border);
+  --color-status-pending-fg: var(--status-pending-fg);
+  --color-status-pending-soft: var(--status-pending-soft);
+  --color-status-approved-border: var(--status-approved-border);
+  --color-status-approved-fg: var(--status-approved-fg);
+  --color-status-approved-soft: var(--status-approved-soft);
+  --color-status-archived-border: var(--status-archived-border);
+  --color-status-archived-fg: var(--status-archived-fg);
+  --color-status-archived-soft: var(--status-archived-soft);
+  --color-status-error-bg: var(--status-error-bg);
+  --color-status-error-fg: var(--status-error-fg);
+
+  /* v1 status-token compat aliases — let existing `bg-status-*-bg` Tailwind
+   * classes in consumer apps keep building. New code should use the
+   * outline-style Pill primitive instead. Drop these aliases in a future pass
+   * once all consumers have migrated to the v2 status conventions. */
+  --color-status-issued-bg: var(--status-issued-soft);
+  --color-status-pending-bg: var(--status-pending-soft);
+  --color-status-approved-bg: var(--status-approved-soft);
+  --color-status-archived-bg: var(--status-archived-soft);
+
+  /* shadcn abstract tokens — repointed to v2 paper/ink/border */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Typography — three families, three roles */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-heading: var(--font-display);
+
+  /* New type scale step: text-2xs for section labels + blueprint-rule labels */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  /* Editorial scale jumps — generated for Fraunces moments */
+  --text-display: 3.5rem;
+  --text-display--line-height: 3.75rem;
+
+  /* v2 radii — chrome is flat, inputs get 4px, modals get 6px */
+  --radius-none: 0;
+  --radius-pill: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Motion easings — never use default ease / ease-in-out */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  /* Page-enter — applied to the route page root only, never to every child.
+   * Children appear instantly. The animation respects prefers-reduced-motion
+   * via the global reduce block at the bottom of this file. */
+  --animate-page-enter: page-enter 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+:root {
+  /* === Brand palette (unchanged from v1) === */
+  --dp-navy: #1F4792;
+  --dp-navy-hover: #2B5BB5;
+  --dp-navy-soft: #E7EEF9;
+  --dp-cyan: #1694D0;
+  --dp-cyan-hover: #41ABDB;
+  --dp-cyan-soft: #E1EFF8;
+  --dp-ink: #0A0A0A;
+  --dp-ink-soft: #1A1A1A;
+
+  /* === Paper & ink — workspace neutrals (v2 signature) === */
+  --paper: #FAF9F6;
+  --paper-soft: #F4F2EC;
+  --paper-deep: #ECE9E1;
+  --ink: #26221B;
+  --ink-soft: #6E6A60;
+
+  /* === Borders & rules — warm-charcoal tier === */
+  --rule-strong: #1A1A1A;
+  --border-soft: #C7C2B9;
+  --border-paper: #E4E0D7;
+
+  /* === Status palette — outline + deep text, solid only for error === */
+  --status-issued-border: #1E3A8A;
+  --status-issued-fg: #1E3A8A;
+  --status-issued-soft: #E7EEF9;
+  --status-pending-border: #92400E;
+  --status-pending-fg: #92400E;
+  --status-pending-soft: #F7EFE0;
+  --status-approved-border: #065F46;
+  --status-approved-fg: #065F46;
+  --status-approved-soft: #E7F0E9;
+  --status-archived-border: #52524A;
+  --status-archived-fg: #52524A;
+  --status-archived-soft: #ECE9E1;
+  --status-error-bg: #7F1D1D;
+  --status-error-fg: #FFFFFF;
+
+  /* === shadcn semantic tokens repointed to v2 === */
+  --background: var(--paper);
+  --foreground: var(--ink);
+
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+
+  --primary: var(--dp-navy);
+  --primary-foreground: #FFFFFF;
+
+  --secondary: var(--paper-soft);
+  --secondary-foreground: var(--ink);
+
+  --muted: var(--paper-soft);
+  --muted-foreground: var(--ink-soft);
+
+  --accent: var(--dp-navy-soft);
+  --accent-foreground: var(--dp-navy);
+
+  --destructive: var(--status-error-bg);
+  --border: #2D2A26;
+  --input: var(--border-soft);
+  --ring: var(--dp-cyan);
+
+  --chart-1: var(--dp-navy);
+  --chart-2: var(--dp-cyan);
+  --chart-3: #1E3A8A;
+  --chart-4: #065F46;
+  --chart-5: #92400E;
+
+  /* Left rail — paper-soft per v2 spec (LeftNav, not pure paper) */
+  --sidebar: var(--paper-soft);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--dp-navy);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: var(--dp-navy-soft);
+  --sidebar-accent-foreground: var(--dp-navy);
+  --sidebar-border: var(--border-paper);
+  --sidebar-ring: var(--dp-cyan);
+
+  /* Base radius — flat edges by default. Opt into rounding per-component. */
+  --radius: 0;
+}
+
+/* Dark mode kept defined but not surfaced via UI.
+ * App chrome (TopBar) is always dp-ink regardless of workspace theme.
+ * v2 dark uses warm near-black + paper-warm foreground (no cool-grey). */
+.dark {
+  --background: #1A1714;
+  --foreground: #ECE9E1;
+
+  --card: #221E1A;
+  --card-foreground: #ECE9E1;
+
+  --popover: #221E1A;
+  --popover-foreground: #ECE9E1;
+
+  --primary: var(--dp-cyan);
+  --primary-foreground: #0A0A0A;
+
+  --secondary: #2D2A26;
+  --secondary-foreground: #ECE9E1;
+
+  --muted: #2D2A26;
+  --muted-foreground: #9F9A8E;
+
+  --accent: #2D2A26;
+  --accent-foreground: var(--dp-cyan);
+
+  --destructive: #B91C1C;
+  --border: #3A352F;
+  --input: #3A352F;
+  --ring: var(--dp-cyan);
+
+  --sidebar: #0A0A0A;
+  --sidebar-foreground: #ECE9E1;
+  --sidebar-primary: var(--dp-cyan);
+  --sidebar-primary-foreground: #0A0A0A;
+  --sidebar-accent: #2D2A26;
+  --sidebar-accent-foreground: var(--dp-cyan);
+  --sidebar-border: #2D2A26;
+  --sidebar-ring: var(--dp-cyan);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+  html {
+    @apply font-sans antialiased;
+  }
+  /* Cyan focus ring across all interactive elements */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-dp-cyan;
+  }
+
+  /* Fraunces opsz axis — large headings get an opsz-tuned cut.
+   * Apply via the .font-display utility OR explicitly per-heading. */
+  .font-display {
+    font-variation-settings: "opsz" 96, "SOFT" 30;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* =============================================================================
+ * Motion / Accessibility
+ *
+ * The single highest-leverage line of CSS in v2. Every consumer inherits this
+ * on next bootstrap, so the family ships with reduced-motion respect by default.
+ *
+ * Opacity transitions ≤100ms still feel native under reduced motion; everything
+ * else (translate, scale, rotate, blur) is collapsed to a frame.
+ * =============================================================================
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

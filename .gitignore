@@ -1,0 +1,10 @@
+node_modules
+*.log
+.DS_Store
+.next
+.vercel
+.turbo
+.tsbuildinfo
+
+# macOS Spotlight dupe defense — see SAAS Factory memory reference_repo_hygiene_patterns
+**/* [0-9].*
