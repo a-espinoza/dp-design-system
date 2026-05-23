@@ -104,6 +104,8 @@ In `src/app/globals.css`, add a `@source` directive so Tailwind generates utilit
 | `@dreampak/design-system/feedback-bubble-mount` | `FeedbackBubbleMount` — mount-and-gate wrapper for `FeedbackBubble`; the root layout invokes this one |
 | `@dreampak/design-system/build-tag` | `BuildTag` — the bottom-left version pill so users know which revision they're looking at |
 | `@dreampak/design-system/screenshot-editor` | `ScreenshotEditor` — overlay that crops + annotates a `html2canvas` capture before attach |
+| `@dreampak/design-system/toast` | `ToastProvider`, `useToast()`, 5 variants (success/error/warn/info/loading) — motion per docs/DESIGN.md |
+| `@dreampak/design-system/spinner` | `Spinner` (xs/sm/md/lg) — the 12px rotating glyph per docs/DESIGN.md spinner spec |
 | `@dreampak/design-system/eslint-config` | Shared flat-config ESLint config (Next core-web-vitals + Next TS + `.vercel/**` ignore) |
 
 ## ESLint
@@ -234,6 +236,126 @@ A consumer that wants the screenshot path to work MUST keep
 button surfaces a polite "couldn't capture" error and the text-only
 feedback path still works.
 
+## Toast + Spinner (v0.6.0)
+
+Two new primitives consolidate per-app rolled-by-hand UX: the standard
+toast notification system and the standard spinner glyph. Previously
+every consumer rolled its own (mostly `Loader2` from lucide for spinners,
+varied/missing toast UX).
+
+### Spinner
+
+```tsx
+import { Spinner } from "@dreampak/design-system/spinner";
+
+<Spinner size="md" />                  // default — 16px
+<Spinner size="xs" />                  // inline in dense data rows
+<Spinner size="lg" />                  // page-level loading shells
+
+// Inside a button — picks up the button's text color via currentColor.
+<Button variant="primary" disabled>
+  <Spinner size="sm" />
+  Saving…
+</Button>
+```
+
+Per [`docs/DESIGN.md`](https://github.com/a-espinoza/dp-app-template/blob/main/docs/DESIGN.md)
+§ Motion: "a 12px rotating glyph spinning linear-360°-1s-infinite. Never
+animate-pulse. Never a glowing dot." Color inherits from `currentColor`
+so callers control via parent text color.
+
+### Toast
+
+```tsx
+// src/app/layout.tsx — mount the provider near the app root.
+import { ToastProvider } from "@dreampak/design-system/toast";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <ToastProvider position="bottom-right">{children}</ToastProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+```tsx
+// Anywhere inside the provider tree.
+"use client";
+import { useToast } from "@dreampak/design-system/toast";
+
+function SaveButton() {
+  const { toast, dismiss } = useToast();
+  return (
+    <Button
+      onClick={async () => {
+        const id = toast({ variant: "loading", title: "Saving…" });
+        try {
+          const created = await save();
+          dismiss(id);
+          toast({
+            variant: "success",
+            title: "Saved",
+            description: `${created.id} created`,
+          });
+        } catch (err) {
+          dismiss(id);
+          toast({
+            variant: "error",
+            title: "Couldn't save",
+            description: err instanceof Error ? err.message : "Unknown error",
+          });
+        }
+      }}
+    >
+      Save
+    </Button>
+  );
+}
+```
+
+#### Variants
+
+| Variant   | Token base                                    | Glyph         | Auto-dismiss |
+|-----------|-----------------------------------------------|---------------|--------------|
+| `success` | outline status-approved-border + -fg          | Check         | 5 s          |
+| `error`   | solid status-error-bg + -fg                   | AlertCircle   | 8 s          |
+| `warn`    | outline status-pending-border + -fg           | AlertTriangle | 5 s          |
+| `info`    | outline status-issued-border + -fg            | Info          | 5 s          |
+| `loading` | paper-deep + ink-soft + inline `<Spinner />`  | Spinner       | indefinite   |
+
+The variant→token mapping mirrors the Pill primitive so the visual
+family stays cohesive.
+
+#### Motion
+
+Per [`docs/DESIGN.md`](https://github.com/a-espinoza/dp-app-template/blob/main/docs/DESIGN.md)
+§ Motion table:
+
+- Enter: translate from edge + opacity, **240 ms ease-out** (`var(--ease-out)`)
+- Exit:  half-distance translate + opacity, **180 ms ease-in** (`var(--ease-in)`)
+
+The exit is deliberately subtler than the enter — Jakub's
+subtler-exit rule. `prefers-reduced-motion` collapses both transitions
+to ~0 via the global `@media` rule in `styles.css`.
+
+#### Position
+
+`ToastProvider position` accepts `bottom-right` (default), `bottom-left`,
+`top-right`, `top-left`, or `bottom-center`. Translate origin auto-adjusts.
+
+#### Manual dismiss
+
+- Click anywhere on the toast → dismisses that toast
+- Press **Escape** → dismisses the most-recent toast
+
+#### Stack cap
+
+Max **4** toasts visible. New toasts push older ones up; if the stack
+overflows, the oldest is dropped so the newest is always visible.
+
 ## Versioning
 
 Releases are git tags. Consumers pin to a tag for stability:
@@ -286,7 +408,7 @@ Four Playwright projects render `/showcase`:
 - `mobile` — iPhone 13
 - `reduced-motion` — desktop viewport with `prefers-reduced-motion: reduce` emulated
 
-Each project produces one full-page screenshot plus nine per-section screenshots (Typography, Buttons, Pills, Fields, DataTable, Cards, SectionRule, Motion, Color tokens). Baselines live under `tests/__screenshots__/<project>/`.
+Each project produces one full-page screenshot plus eleven per-section screenshots (Typography, Buttons, Pills, Fields, DataTable, Cards, SectionRule, Motion, Color tokens, Spinners, Toasts). Baselines live under `tests/__screenshots__/<project>/`.
 
 ### CI
 
@@ -320,6 +442,15 @@ If `test:visual` fails on a non-intentional diff, do NOT publish — investigate
 A future minor version may move the `/showcase` route INTO this package as a self-contained Next.js demo (under `examples/showcase-app/`) so the harness can boot without depending on an external repo. That migration would re-enable a CI workflow. Tracked as follow-up under the design-system project.
 
 ## Changelog
+
+### v0.6.0 (2026-05-23)
+- New exports: `@dreampak/design-system/toast` (`ToastProvider`, `useToast()`, 5 variants) and `@dreampak/design-system/spinner` (`Spinner` xs/sm/md/lg)
+- Spinner is the 12px rotating glyph per `docs/DESIGN.md` § Motion — fixed-stroke circle + quarter-arc front; no pulse, no glow, no dot. Inherits `currentColor`.
+- Toast motion is 240 ms ease-out enter / 180 ms ease-in exit (the subtler-exit rule) per `docs/DESIGN.md` Motion table. Variants map to v2 status tokens so the visual family stays cohesive with Pill.
+- Auto-dismiss per variant (success/info/warn 5 s, error 8 s, loading indefinite). Manual dismiss on click or Escape. Max 4 toasts stacked.
+- Showcase route in `dp-app-template` gains "Spinners" and "Toasts" sections with a live-fire trigger button at the footer
+- New baselines for the two new showcase sections only — the other 9 sections are unchanged
+- No breaking changes; v0.5.x consumers continue to work without edits. No new npm deps — pure React context + Portal + the package's existing `tw-animate-css` utilities.
 
 ### v0.5.0 (2026-05-23)
 - New exports: `@dreampak/design-system/feedback-bubble`, `/feedback-bubble-mount`, `/build-tag`, `/screenshot-editor` — the family-wide beta feedback FAB + version pill, previously duplicated as local copies in all 9 consumer repos (dp-hub + 8 apps including the template)
