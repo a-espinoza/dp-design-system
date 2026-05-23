@@ -46,6 +46,8 @@ test.describe("showcase", () => {
     "section-rules",
     "motion",
     "color-tokens",
+    "spinners",
+    "toasts",
   ] as const;
 
   for (const slug of sections) {
