@@ -1,6 +1,6 @@
 {
   "name": "@dreampak/design-system",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "DreamPak design system v2 — Spec-sheet Editorial. Shared tokens + chrome + ui primitives for the DreamPak app family.",
   "license": "UNLICENSED",
   "private": false,
@@ -9,6 +9,11 @@
     "src",
     "README.md"
   ],
+  "scripts": {
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "test:visual:install": "playwright install --with-deps chromium"
+  },
   "exports": {
     "./styles.css": "./src/styles.css",
     "./fonts": "./src/fonts.ts",
@@ -29,6 +34,10 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
     "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "playwright": "^1.49.0"
   },
   "peerDependencies": {
     "@base-ui/react": "^1.0.0",
