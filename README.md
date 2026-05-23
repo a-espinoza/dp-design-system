@@ -97,9 +97,46 @@ In `src/app/globals.css`, add a `@source` directive so Tailwind generates utilit
 | `@dreampak/design-system/field` | `Field` (label + helper wrapper), `Input` (baseline input) |
 | `@dreampak/design-system/data-table` | `DataTable<T>` generic table |
 | `@dreampak/design-system/section-rule` | `SectionRule` (the blueprint rule, optional label) |
-| `@dreampak/design-system/app-shell` | `AppShell` (TopBar + LeftNav + workspace) |
-| `@dreampak/design-system/top-bar` | `TopBar` (dp-ink bar, configurable logo + apps link) |
-| `@dreampak/design-system/left-nav` | `LeftNav` (paper-soft sidebar, takes generic `navItems` prop) |
+| `@dreampak/design-system/app-shell` | `AppShell` (TopBar + LeftNav + workspace, forwards TopBar slots) |
+| `@dreampak/design-system/top-bar` | `TopBar` (dp-ink bar; configurable logo + apps link; `topRightSlot` / `centerSlot` / `leftAccessory` render slots) |
+| `@dreampak/design-system/left-nav` | `LeftNav` (paper-soft sidebar; generic `navItems` with optional per-item `badge` render slot) |
+
+## Chrome slot props (v0.2.0)
+
+The default chrome covers the lowest-common-denominator mini-app — logo + Apps link in the bar, label + icon in the nav. Consumers that need more (badges, account menus, search forms, environment chips) inject those into render slots rather than forking the components.
+
+```tsx
+import { AppShell } from "@dreampak/design-system/app-shell";
+import type { NavItem } from "@dreampak/design-system/left-nav";
+import { Home, List } from "lucide-react";
+
+const navItems: NavItem[] = [
+  { href: "/", label: "Home", Icon: Home, isActive: (p) => p === "/" },
+  {
+    href: "/items",
+    label: "Items",
+    Icon: List,
+    isActive: (p) => p.startsWith("/items"),
+    // Inline badge — caller fully controls the visual.
+    badge: pendingCount > 0 ? (
+      <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-dp-cyan px-1.5 text-[10px] font-semibold leading-none text-white">
+        {pendingCount}
+      </span>
+    ) : undefined,
+  },
+];
+
+<AppShell
+  navItems={navItems}
+  topBarLeftAccessory={<EnvChip env="staging" />}
+  topBarCenterSlot={<GlobalSearchForm />}
+  topBarRightSlot={<AccountMenu userEmail={email} />}
+>
+  {children}
+</AppShell>
+```
+
+All slots are optional; when undefined the v0.1.x layout renders unchanged.
 
 ## Versioning
 
@@ -114,6 +151,20 @@ Or track `main` for latest:
 ```json
 "@dreampak/design-system": "github:a-espinoza/dp-design-system#main"
 ```
+
+## Changelog
+
+### v0.2.0
+- TopBar gains `topRightSlot`, `centerSlot`, `leftAccessory` render-prop slots
+- LeftNav `NavItem` gains optional `badge` field
+- AppShell forwards the new TopBar slots via `topBarRightSlot` / `topBarCenterSlot` / `topBarLeftAccessory`
+- No breaking changes; v0.1.x consumers continue to work without edits
+
+### v0.1.1 (2026-05-22)
+- fix: TopBar accepts logo/href overrides so AppShell typechecks
+
+### v0.1.0 (2026-05-22)
+- Initial extraction from dp-app-template
 
 ## License
 
