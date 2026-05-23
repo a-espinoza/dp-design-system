@@ -178,7 +178,64 @@ Or track `main` for latest:
 "@dreampak/design-system": "github:a-espinoza/dp-design-system#main"
 ```
 
+## Visual regression
+
+`v0.4.0` adds a Playwright-based screenshot harness for every primitive shipped by the package. The harness boots `dp-app-template`'s `/showcase` route — the single page that exercises every variant — and screenshot-diffs against committed baselines.
+
+**Why a separate harness for the package:** the package has no app to render in. The showcase route is the canonical reference surface, and the harness catches accidental visual drift before publish so consumers don't have to.
+
+### Running locally
+
+The harness expects `dp-app-template` to be a sibling directory:
+
+```
+SAAS Factory/
+  dp-design-system/
+  dp-app-template/
+```
+
+From the package root:
+
+```bash
+# One-time browser install
+npm run test:visual:install
+
+# Run the harness (diffs against committed baselines)
+npm run test:visual
+
+# Intentional design change — regenerate baselines, then commit them
+npm run test:visual:update
+```
+
+### What runs
+
+Four Playwright projects render `/showcase`:
+
+- `desktop` — 1280×800 Chromium
+- `tablet` — iPad Pro 11
+- `mobile` — iPhone 13
+- `reduced-motion` — desktop viewport with `prefers-reduced-motion: reduce` emulated
+
+Each project produces one full-page screenshot plus nine per-section screenshots (Typography, Buttons, Pills, Fields, DataTable, Cards, SectionRule, Motion, Color tokens). Baselines live under `tests/__screenshots__/<project>/`.
+
+### CI
+
+`.github/workflows/visual-regression.yml` runs the harness on every PR to `main` and every push to `main`. The workflow clones `dp-design-system` and `dp-app-template` side-by-side, links the local package checkout into the template's `node_modules`, and runs `npm run test:visual` against the dev server. On failure the Playwright HTML report and diff PNGs upload as workflow artifacts so a reviewer can decide between "real regression" and "intentional change, update baselines."
+
+### Maintainer responsibilities
+
+- Treat baseline diffs as code review. Intentional visual changes regenerate baselines; unintentional ones get rolled back.
+- Don't commit screenshots outside `tests/__screenshots__/` — the gitignore covers `playwright-report/`, `test-results/`, and `blob-report/`.
+- The package version that ships visual changes bumps minor; baseline-only churn within an unchanged primitive still gets a release note.
+
 ## Changelog
+
+### v0.4.0 (2026-05-23)
+- New tooling: Playwright visual regression harness — screenshots every primitive variant on `dp-app-template`'s `/showcase` route at 3 viewports plus reduced-motion
+- CI: `.github/workflows/visual-regression.yml` runs on every PR + push to main; uploads diff artifacts on failure
+- Baselines: `tests/__screenshots__/` is the source of truth for the v2 visual contract
+- Adds `@playwright/test` + `playwright` as devDependencies; consumers are unaffected (devDependencies are not installed when the package is consumed via `github:` URL)
+- No runtime or API changes; this is a tooling-only release
 
 ### v0.3.0 (2026-05-23)
 - New export: `@dreampak/design-system/eslint-config` — shared flat-config ESLint config (Next core-web-vitals + Next TS + `.vercel/**` ignore)
