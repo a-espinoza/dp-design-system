@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { TopBar } from "./top-bar";
 import { LeftNav, type NavItem } from "./left-nav";
 
@@ -9,7 +10,13 @@ type AppShellProps = {
   topBarLogoAlt?: string;
   topBarAppsHref?: string;
   topBarHomeHref?: string;
-  children: React.ReactNode;
+  // v0.2.0 — pass-through slots forwarded to TopBar so consumers can
+  // hang their own chrome (account menu, search form, env chip, …)
+  // without forking the shell.
+  topBarRightSlot?: ReactNode;
+  topBarCenterSlot?: ReactNode;
+  topBarLeftAccessory?: ReactNode;
+  children: ReactNode;
 };
 
 // Mini-app shell — workspace = paper, LeftNav = paper-soft, TopBar = dp-ink.
@@ -20,6 +27,9 @@ export function AppShell({
   topBarLogoAlt,
   topBarAppsHref,
   topBarHomeHref,
+  topBarRightSlot,
+  topBarCenterSlot,
+  topBarLeftAccessory,
   children,
 }: AppShellProps) {
   return (
@@ -29,6 +39,9 @@ export function AppShell({
         logoAlt={topBarLogoAlt}
         appsHref={topBarAppsHref}
         homeHref={topBarHomeHref}
+        topRightSlot={topBarRightSlot}
+        centerSlot={topBarCenterSlot}
+        leftAccessory={topBarLeftAccessory}
       />
       <div className="flex flex-1 overflow-hidden">
         <LeftNav items={navItems} />

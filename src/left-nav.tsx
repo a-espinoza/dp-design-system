@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
 
 export type NavItem = {
   href: string;
@@ -10,6 +10,10 @@ export type NavItem = {
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
   // Per-route active check. Receives the current pathname.
   isActive: (path: string) => boolean;
+  // v0.2.0 — optional small inline content rendered after the label
+  // (counter, status chip, "NEW" tag). Pushed to the right rail of the
+  // row. The caller controls the visual; the nav just slots it in.
+  badge?: ReactNode;
 };
 
 type LeftNavProps = {
@@ -27,7 +31,7 @@ export function LeftNav({ items, ariaLabel = "Primary" }: LeftNavProps) {
       aria-label={ariaLabel}
       className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar py-2"
     >
-      {items.map(({ href, label, Icon, isActive }) => {
+      {items.map(({ href, label, Icon, isActive, badge }) => {
         const active = isActive(path);
         return (
           <Link
@@ -44,7 +48,8 @@ export function LeftNav({ items, ariaLabel = "Primary" }: LeftNavProps) {
             <Icon
               className={"size-4 " + (active ? "text-dp-navy" : "text-muted-foreground")}
             />
-            <span>{label}</span>
+            <span className="flex-1">{label}</span>
+            {badge != null ? <span className="ml-auto pl-2">{badge}</span> : null}
           </Link>
         );
       })}
