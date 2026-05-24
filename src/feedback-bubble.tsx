@@ -10,7 +10,7 @@
 //  - Single tap to open, escape / backdrop to close
 //  - Category pills (bug | idea | love | confused | question | other)
 //  - Path, viewport, user_agent auto-captured
-//  - Optional screenshot via lazy-loaded html2canvas + ScreenshotEditor
+//  - Optional screenshot via lazy-loaded html-to-image + ScreenshotEditor
 //  - Contribution count + beta level surfaced as light gamification
 //  - Admin replies render inline; green dot on the FAB while unread
 //  - Cmd/Ctrl + / shortcut to open from anywhere
@@ -298,31 +298,33 @@ export function FeedbackBubble({ appSlug, apiOrigin = "" }: FeedbackBubbleProps)
     }
   }
 
-  // Capture the current viewport with html2canvas + hand off to ScreenshotEditor.
-  // html2canvas is lazy-loaded (~200KB) so the initial bundle stays light.
+  // Capture the current viewport with html-to-image + hand off to ScreenshotEditor.
+  // html-to-image is lazy-loaded so the initial bundle stays light.
+  // We use html-to-image instead of html2canvas because html2canvas v1.x
+  // throws on oklab() CSS color functions emitted by Tailwind v4 (AEH-236/240).
+  // html-to-image serialises computed styles via getComputedStyle, avoiding
+  // the custom CSS parser that broke on modern color functions.
   async function handleStartCapture() {
     setError(null);
     setCaptureMode("capturing");
     try {
       // Two paint frames so the sheet's opacity transition commits before
-      // html2canvas samples the DOM. Without this you can see a ghost of
+      // the capture samples the DOM. Without this you can see a ghost of
       // the sheet on first invocation.
       await new Promise<void>((resolve) => {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       });
-      const html2canvasMod = await import("html2canvas");
-      const html2canvas = html2canvasMod.default;
-      const canvas = await html2canvas(document.documentElement, {
-        logging: false,
-        useCORS: true,
-        backgroundColor: null,
-        ignoreElements: (el: Element) => {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(document.documentElement, {
+        // filter returns true → include the node, false → skip it.
+        // We exclude the bubble root so the FAB/sheet never appear in
+        // the captured screenshot.
+        filter: (el: Element) => {
           const root = bubbleRootRef.current;
-          if (!root) return false;
-          return el === root || root.contains(el);
+          if (!root) return true;
+          return !(el === root || root.contains(el));
         },
       });
-      const dataUrl = canvas.toDataURL("image/png");
       setCaptureSource(dataUrl);
       setCaptureMode("editing");
     } catch (err) {

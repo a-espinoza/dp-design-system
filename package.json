@@ -1,6 +1,6 @@
 {
   "name": "@dreampak/design-system",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "DreamPak design system v2 — Spec-sheet Editorial. Shared tokens + chrome + ui primitives for the DreamPak app family.",
   "license": "UNLICENSED",
   "private": false,
@@ -38,6 +38,7 @@
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "html-to-image": "^1.11.11",
     "lucide-react": "^1.16.0",
     "tailwind-merge": "^3.6.0"
   },
